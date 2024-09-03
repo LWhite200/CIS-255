@@ -16,10 +16,24 @@
             color: white;
             font-family: Arial, sans-serif;
         }
+
         canvas {
             background-color: #20232a;
             border: 1px solid #61dafb;
         }
+
+        #score, #lives {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 18px;
+        }
+
+        #lives {
+            left: auto;
+            right: 10px;
+        }
+
         #gameOver {
             display: none;
             position: absolute;
@@ -29,11 +43,28 @@
             font-size: 24px;
             color: red;
         }
+
+        #restartButton {
+            display: none;
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 10px 20px;
+            font-size: 18px;
+            color: white;
+            background-color: #61dafb;
+            border: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <div id="score">Score: 0</div>
+    <div id="lives">Lives: 3</div>
     <div id="gameOver">Game Over!</div>
+    <button id="restartButton" onclick="restartGame()">Restart</button>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
@@ -51,6 +82,9 @@
 
         let rightPressed = false;
         let leftPressed = false;
+
+        let score = 0;
+        let lives = 3;
 
         document.addEventListener('keydown', keyDownHandler);
         document.addEventListener('keyup', keyUpHandler);
@@ -87,10 +121,20 @@
             ctx.closePath();
         }
 
+        function drawScore() {
+            document.getElementById('score').textContent = `Score: ${score}`;
+        }
+
+        function drawLives() {
+            document.getElementById('lives').textContent = `Lives: ${lives}`;
+        }
+
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawBall();
             drawPaddle();
+            drawScore();
+            drawLives();
 
             if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) {
                 dx = -dx;
@@ -101,9 +145,24 @@
             } else if (y + dy > canvas.height - ballRadius) {
                 if (x > paddleX && x < paddleX + paddleWidth) {
                     dy = -dy;
+                    score++;
+                    if (score % 5 === 0) { // Increase speed every 5 points
+                        dx += dx > 0 ? 1 : -1;
+                        dy += dy > 0 ? 1 : -1;
+                    }
                 } else {
-                    document.getElementById('gameOver').style.display = 'block';
-                    return;
+                    lives--;
+                    if (!lives) {
+                        document.getElementById('gameOver').style.display = 'block';
+                        document.getElementById('restartButton').style.display = 'block';
+                        return;
+                    } else {
+                        x = canvas.width / 2;
+                        y = canvas.height - 30;
+                        dx = 2;
+                        dy = -2;
+                        paddleX = (canvas.width - paddleWidth) / 2;
+                    }
                 }
             }
 
@@ -117,6 +176,19 @@
             }
 
             requestAnimationFrame(draw);
+        }
+
+        function restartGame() {
+            score = 0;
+            lives = 3;
+            x = canvas.width / 2;
+            y = canvas.height - 30;
+            dx = 2;
+            dy = -2;
+            paddleX = (canvas.width - paddleWidth) / 2;
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('restartButton').style.display = 'none';
+            draw();
         }
 
         draw();
